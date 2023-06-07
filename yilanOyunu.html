@@ -1,0 +1,99 @@
+<canvas id="game" width="400" height="400"></canvas>
+<script>
+    class SneakGame {
+        constructor() {
+            this.canvas = document.getElementById("game");
+            this.context = this.canvas.getContext("2d");
+            document.addEventListener("keydown", this.onKeyPress.bind(this));
+        }
+        init() {
+            this.positionX = this.positionY = 10; //x ve y kordinatlarında yılanın başlangıç değeri
+            this.appleX = this.appleY = 5; //elmanın kordinatları 
+            this.tailSize = 5; // yılanın boyutu
+            this.trail = [];//yılanın karelerinin kordinatlarının tutulduğu dizi oluşturduk
+            this.gridSize = this.tileCount = 20;//ekranı yirmiye yirmiye böldük
+            this.veloCityX = this.veloCityY = 0;//bu yılanın hangi yöne gideceğinin hesabını tutan değişken
+            //her oyunun bir döngüsü vardır
+            this.timer = setInterval(this.loop.bind(this), 2000 / 15);
+            //her saniyede 15 kez loop metodu çağırılacak    
+        }
+        reset() {
+            clearInterval(this.timer);//setinterval ile oluşturduğumuz zamanlağıcıyı silerek oyunu tekrar oynanabilir hale getirdik
+            this.init();
+        }
+        loop() {
+            this.update(); //ilk önce matematiksel hesaplamaları yapacak
+            this.drow(); // ardından yaptığı hesaplamalara binayen bi çizim yapacak
+        }
+        update() {
+            this.positionX += this.veloCityX; //yılanı hareket ettirme
+            this.positionY += this.veloCityY;
+
+            if (this.positionX < 0) {
+                this.positionX = this.tileCount - 1;
+            }
+            if (this.positionY < 0) {
+                this.positionY = this.tileCount - 1;
+            }
+            if (this.positionX > this.tileCount - 1) {
+                this.positionX = 0;
+            }
+            if (this.positionY > this.tileCount - 1) {
+                this.positionY = 0;
+            }
+            this.trail.forEach(t => {
+                if (this.positionX == t.positionX && this.positionY == t.positionY) {
+                    this.reset();
+                }
+            });
+
+            this.trail.push({ positionX: this.positionX, positionY: this.positionY });
+
+            while (this.trail.length > this.tailSize) {
+                this.trail.shift(); //shift diziden silmek için kullandı
+            }
+            if (this.appleX == this.positionX && this.appleY == this.positionY) {
+                this.tailSize++; //yılan büyüdü
+                this.appleX = Math.floor(Math.random() * this.tileCount);//elmanın konumu değişti
+                this.appleY = Math.floor(Math.random() * this.tileCount);
+            }
+
+        }
+        drow() { //ekrana bişeyler çizmeye burdan başlıyoruz
+            this.context.fillStyle = 'black';
+            this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.context.fillStyle = 'white';
+            this.context.font = '20px Arial';
+            this.context.fillText(this.tailSize -5,20, 40);//20 ye 40 kordinatlarına yılanın boyutunu yaz
+            this.context.fillStyle='yellow';
+            this.trail.forEach(t => { //foreach kullanarak diziyi geziyoruz
+                this.context.fillRect(t.positionX * this.gridSize, t.positionY * this.gridSize, this.gridSize - 5, this.gridSize - 5);
+            });
+
+            this.context.fillStyle = 'pink';
+            this.context.fillRect(this.appleX * this.gridSize, this.appleY * this.gridSize, this.gridSize - 5, this.gridSize - 5);
+
+        }
+        onKeyPress(e) {
+            if (e.keyCode === 37 && this.veloCityX !== 1) { //sol ok
+                this.veloCityX = -1;
+                this.veloCityY = 0;
+            }
+            if (e.keyCode === 38 && this.veloCityY !== 1) { //yukarı ok
+                this.veloCityX = 0;
+                this.veloCityY = -1;
+            }
+            if (e.keyCode === 39 && this.veloCityX !== -1) { //sağ ok
+                this.veloCityX = 1;
+                this.veloCityY = 0;
+            }
+            if (e.keyCode === 40 && this.veloCityY !== -1) { //aşağı ok
+                this.veloCityX = 0;
+                this.veloCityY = 1;
+            }
+        }
+    }
+    const game = new SneakGame();
+    window.onload = () => game.init();
+
+</script>
